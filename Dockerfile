@@ -16,6 +16,9 @@ FROM node:20-slim
 
 WORKDIR /app
 
+# Create data directory for SQLite
+RUN mkdir -p /app/data && chmod 777 /app/data
+
 # Copy the build output from the builder stage
 COPY --from=builder /app/.output ./.output
 COPY --from=builder /app/package.json ./package.json
@@ -24,6 +27,7 @@ COPY --from=builder /app/package.json ./package.json
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3000
+ENV DATABASE_URL="file:/app/data/badminton.db"
 
 # Expose the port
 EXPOSE 3000

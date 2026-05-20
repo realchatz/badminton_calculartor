@@ -23,10 +23,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Maximum 4 players allowed' })
   }
 
-  if (shuttlecock.players.some(p => p.memberId === memberId)) {
-    throw createError({ statusCode: 400, message: 'Member already added' })
-  }
-
   const newPlayer = {
     id: crypto.randomUUID(),
     shuttlecockId,

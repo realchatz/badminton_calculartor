@@ -8,3 +8,4 @@ dist
 README.md
 Dockerfile
 .dockerignore
+.env.example

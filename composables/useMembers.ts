@@ -13,7 +13,7 @@ export const useMembers = () => {
   const addMember = async (name: string) => {
     if (!name.trim()) return
     
-    // Optimistic check (optional)
+    // Optimistic check
     const exists = members.value.some(m => m.name.toLowerCase() === name.toLowerCase())
     if (exists) {
       alert('Member with this name already exists.')

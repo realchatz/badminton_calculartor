@@ -3,14 +3,11 @@ import { Server } from 'node:http';
 import { resolve, dirname, join } from 'node:path';
 import nodeCrypto from 'node:crypto';
 import { parentPort, threadId } from 'node:worker_threads';
-import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, createError, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, appendResponseHeader, getRequestURL, getResponseHeader, removeResponseHeader, getQuery as getQuery$1, readBody, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getResponseStatus, getRouterParam, getResponseStatusText } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/h3/dist/index.mjs';
+import { defineEventHandler, handleCacheHeaders, splitCookiesString, createEvent, fetchWithEvent, isEvent, eventHandler, setHeaders, createError, sendRedirect, proxyRequest, getRequestHeader, setResponseHeaders, setResponseStatus, send, getRequestHeaders, setResponseHeader, appendResponseHeader, getRequestURL, getResponseHeader, removeResponseHeader, getQuery as getQuery$1, readBody, createApp, createRouter as createRouter$1, toNodeListener, lazyEventHandler, getResponseStatus, getRouterParam, setCookie, deleteCookie, getCookie, getResponseStatusText } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/h3/dist/index.mjs';
 import { escapeHtml } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/@vue/shared/dist/shared.cjs.js';
 import viteNodeEntry_mjs from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/@nuxt/vite-builder/dist/vite-node-entry.mjs';
 import { viteNodeFetch } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/@nuxt/vite-builder/dist/vite-node.mjs';
-import { relations, eq, count } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/drizzle-orm/index.js';
-import { drizzle } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/drizzle-orm/libsql/index.js';
-import { createClient } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/@libsql/client/lib-esm/node.js';
-import { sqliteTable, text, real, integer } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/drizzle-orm/sqlite-core/index.js';
+import { relations, sql, eq, count } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/drizzle-orm/index.js';
 import { createRenderer, getRequestDependencies, getPreloadLinks, getPrefetchLinks } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/vue-bundle-renderer/dist/runtime.mjs';
 import { parseURL, withoutBase, joinURL, getQuery, withQuery, withTrailingSlash, decodePath, withLeadingSlash, withoutTrailingSlash, encodePath, joinRelativeURL } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/ufo/dist/index.mjs';
 import { renderToString } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/vue/server-renderer/index.mjs';
@@ -38,6 +35,9 @@ import { SourceMapConsumer } from 'file://D:/badminton_calculator/badminton-fee-
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { getContext } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/unctx/dist/index.mjs';
 import { captureRawStackTrace, parseRawStackTrace } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/errx/dist/index.js';
+import { drizzle } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/drizzle-orm/libsql/index.js';
+import { createClient } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/@libsql/client/lib-esm/node.js';
+import { sqliteTable, text, real, integer } from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/drizzle-orm/sqlite-core/index.js';
 import _wH6JrtIxmaSoA8lCPWFnE9z4lQeXW6H5z3l5aymEQw from 'file://D:/badminton_calculator/badminton-fee-app/node_modules/@nuxt/vite-builder/dist/fix-stacktrace.mjs';
 import { promises } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -656,7 +656,9 @@ const _inlineRuntimeConfig = {
       }
     }
   },
-  "public": {}
+  "public": {
+    "promptPayId": "000-000-0000"
+  }
 };
 const envOptions = {
   prefix: "NITRO_",
@@ -2158,9 +2160,127 @@ function onConsoleLog(callback) {
 	consola$1.wrapConsole();
 }
 
+function defineNitroPlugin(def) {
+  return def;
+}
+
+const members = sqliteTable("members", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull()
+});
+const tubes = sqliteTable("tubes", {
+  id: text("id").primaryKey(),
+  tubeNo: integer("tube_no").notNull(),
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull()
+});
+const tubesRelations = relations(tubes, ({ many }) => ({
+  shuttlecocks: many(shuttlecocks)
+}));
+const shuttlecocks = sqliteTable("shuttlecocks", {
+  id: text("id").primaryKey(),
+  tubeId: text("tube_id").notNull().references(() => tubes.id, { onDelete: "cascade" }),
+  shuttlecockNo: integer("shuttlecock_no").notNull(),
+  feePerPlayer: real("fee_per_player").notNull().default(20),
+  status: text("status").notNull().default("Pending"),
+  // 'Pending' | 'Completed'
+  createdAt: text("created_at").notNull(),
+  updatedAt: text("updated_at").notNull()
+});
+const shuttlecocksRelations = relations(shuttlecocks, ({ one, many }) => ({
+  tube: one(tubes, {
+    fields: [shuttlecocks.tubeId],
+    references: [tubes.id]
+  }),
+  players: many(shuttlecockPlayers)
+}));
+const shuttlecockPlayers = sqliteTable("shuttlecock_players", {
+  id: text("id").primaryKey(),
+  shuttlecockId: text("shuttlecock_id").notNull().references(() => shuttlecocks.id, { onDelete: "cascade" }),
+  memberId: text("member_id").notNull().references(() => members.id),
+  memberName: text("member_name").notNull(),
+  isPaid: integer("is_paid", { mode: "boolean" }).notNull().default(false),
+  paidAt: text("paid_at")
+});
+const shuttlecockPlayersRelations = relations(shuttlecockPlayers, ({ one }) => ({
+  shuttlecock: one(shuttlecocks, {
+    fields: [shuttlecockPlayers.shuttlecockId],
+    references: [shuttlecocks.id]
+  }),
+  member: one(members, {
+    fields: [shuttlecockPlayers.memberId],
+    references: [members.id]
+  })
+}));
+
+const schema = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  members: members,
+  shuttlecockPlayers: shuttlecockPlayers,
+  shuttlecockPlayersRelations: shuttlecockPlayersRelations,
+  shuttlecocks: shuttlecocks,
+  shuttlecocksRelations: shuttlecocksRelations,
+  tubes: tubes,
+  tubesRelations: tubesRelations
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const client = createClient({
+  url: process.env.DATABASE_URL || "file:badminton.db"
+});
+const db = drizzle(client, { schema });
+
+const _JffW2R3optRSi330_O8lVK69ZPjDTBufIL5oBcMD9I = defineNitroPlugin(async (nitroApp) => {
+  console.log("Running database migrations...");
+  try {
+    await db.run(sql`
+      CREATE TABLE IF NOT EXISTS members (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+    await db.run(sql`
+      CREATE TABLE IF NOT EXISTS tubes (
+        id TEXT PRIMARY KEY,
+        tube_no INTEGER NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+    await db.run(sql`
+      CREATE TABLE IF NOT EXISTS shuttlecocks (
+        id TEXT PRIMARY KEY,
+        tube_id TEXT NOT NULL REFERENCES tubes(id) ON DELETE CASCADE,
+        shuttlecock_no INTEGER NOT NULL,
+        fee_per_player REAL NOT NULL DEFAULT 20,
+        status TEXT NOT NULL DEFAULT 'Pending',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+    `);
+    await db.run(sql`
+      CREATE TABLE IF NOT EXISTS shuttlecock_players (
+        id TEXT PRIMARY KEY,
+        shuttlecock_id TEXT NOT NULL REFERENCES shuttlecocks(id) ON DELETE CASCADE,
+        member_id TEXT NOT NULL REFERENCES members(id),
+        member_name TEXT NOT NULL,
+        is_paid INTEGER NOT NULL DEFAULT 0,
+        paid_at TEXT
+      );
+    `);
+    console.log("Database migrations completed successfully.");
+  } catch (error) {
+    console.error("Database migration failed:", error);
+  }
+});
+
 const plugins = [
   _ONo_CeM8j0qy3NOeIfuPGPwFQi3YrenZTjudRc8HJU0,
 _bpLRqhWVFU2ZOvwS2MzRPv6HMhE5lKvpoO0GPBJ43v8,
+_JffW2R3optRSi330_O8lVK69ZPjDTBufIL5oBcMD9I,
 _wH6JrtIxmaSoA8lCPWFnE9z4lQeXW6H5z3l5aymEQw
 ];
 
@@ -2695,6 +2815,9 @@ async function getIslandContext(event) {
 	};
 }
 
+const _lazy_laix1v = () => Promise.resolve().then(function () { return login_post$1; });
+const _lazy_FcbUcP = () => Promise.resolve().then(function () { return logout_post$1; });
+const _lazy_FGJmh8 = () => Promise.resolve().then(function () { return me_get$1; });
 const _lazy_cv2QhQ = () => Promise.resolve().then(function () { return members_delete$1; });
 const _lazy_OQLRWj = () => Promise.resolve().then(function () { return members_get$1; });
 const _lazy_oq2Aax = () => Promise.resolve().then(function () { return members_post$1; });
@@ -2709,6 +2832,9 @@ const _lazy_92Ctme = () => Promise.resolve().then(function () { return renderer;
 
 const handlers = [
   { route: '', handler: _rPBJMq, lazy: false, middleware: true, method: undefined },
+  { route: '/api/auth/login', handler: _lazy_laix1v, lazy: true, middleware: false, method: "post" },
+  { route: '/api/auth/logout', handler: _lazy_FcbUcP, lazy: true, middleware: false, method: "post" },
+  { route: '/api/auth/me', handler: _lazy_FGJmh8, lazy: true, middleware: false, method: "get" },
   { route: '/api/members', handler: _lazy_cv2QhQ, lazy: true, middleware: false, method: "delete" },
   { route: '/api/members', handler: _lazy_OQLRWj, lazy: true, middleware: false, method: "get" },
   { route: '/api/members', handler: _lazy_oq2Aax, lazy: true, middleware: false, method: "post" },
@@ -3073,72 +3199,62 @@ const styles$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   default: styles
 }, Symbol.toStringTag, { value: 'Module' }));
 
-const members = sqliteTable("members", {
-  id: text("id").primaryKey(),
-  name: text("name").notNull(),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull()
+const login_post = defineEventHandler(async (event) => {
+  const body = await readBody(event);
+  const { username, password } = body;
+  const ADMIN_USERNAME = "chatsbp102";
+  const ADMIN_PASSWORD = "chatsbp102";
+  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+    const adminUser = {
+      id: "admin-id",
+      name: "Administrator",
+      role: "admin"
+    };
+    setCookie(event, "auth_session", JSON.stringify(adminUser), {
+      httpOnly: true,
+      secure: false,
+      maxAge: 60 * 60 * 24 * 7,
+      // 1 week
+      path: "/"
+    });
+    return adminUser;
+  }
+  throw createError({ statusCode: 401, message: "Invalid credentials" });
 });
-const tubes = sqliteTable("tubes", {
-  id: text("id").primaryKey(),
-  tubeNo: integer("tube_no").notNull(),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull()
-});
-const tubesRelations = relations(tubes, ({ many }) => ({
-  shuttlecocks: many(shuttlecocks)
-}));
-const shuttlecocks = sqliteTable("shuttlecocks", {
-  id: text("id").primaryKey(),
-  tubeId: text("tube_id").notNull().references(() => tubes.id, { onDelete: "cascade" }),
-  shuttlecockNo: integer("shuttlecock_no").notNull(),
-  feePerPlayer: real("fee_per_player").notNull().default(20),
-  status: text("status").notNull().default("Pending"),
-  // 'Pending' | 'Completed'
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull()
-});
-const shuttlecocksRelations = relations(shuttlecocks, ({ one, many }) => ({
-  tube: one(tubes, {
-    fields: [shuttlecocks.tubeId],
-    references: [tubes.id]
-  }),
-  players: many(shuttlecockPlayers)
-}));
-const shuttlecockPlayers = sqliteTable("shuttlecock_players", {
-  id: text("id").primaryKey(),
-  shuttlecockId: text("shuttlecock_id").notNull().references(() => shuttlecocks.id, { onDelete: "cascade" }),
-  memberId: text("member_id").notNull().references(() => members.id),
-  memberName: text("member_name").notNull(),
-  isPaid: integer("is_paid", { mode: "boolean" }).notNull().default(false),
-  paidAt: text("paid_at")
-});
-const shuttlecockPlayersRelations = relations(shuttlecockPlayers, ({ one }) => ({
-  shuttlecock: one(shuttlecocks, {
-    fields: [shuttlecockPlayers.shuttlecockId],
-    references: [shuttlecocks.id]
-  }),
-  member: one(members, {
-    fields: [shuttlecockPlayers.memberId],
-    references: [members.id]
-  })
-}));
 
-const schema = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+const login_post$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
   __proto__: null,
-  members: members,
-  shuttlecockPlayers: shuttlecockPlayers,
-  shuttlecockPlayersRelations: shuttlecockPlayersRelations,
-  shuttlecocks: shuttlecocks,
-  shuttlecocksRelations: shuttlecocksRelations,
-  tubes: tubes,
-  tubesRelations: tubesRelations
+  default: login_post
 }, Symbol.toStringTag, { value: 'Module' }));
 
-const client = createClient({
-  url: "file:badminton.db"
+const logout_post = defineEventHandler(async (event) => {
+  deleteCookie(event, "auth_session", {
+    path: "/"
+  });
+  return { success: true };
 });
-const db = drizzle(client, { schema });
+
+const logout_post$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  default: logout_post
+}, Symbol.toStringTag, { value: 'Module' }));
+
+const me_get = defineEventHandler(async (event) => {
+  const session = getCookie(event, "auth_session");
+  if (!session) {
+    return null;
+  }
+  try {
+    return JSON.parse(session);
+  } catch (e) {
+    return null;
+  }
+});
+
+const me_get$1 = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty({
+  __proto__: null,
+  default: me_get
+}, Symbol.toStringTag, { value: 'Module' }));
 
 const members_delete = defineEventHandler(async (event) => {
   const body = await readBody(event);
@@ -3168,11 +3284,12 @@ const members_post = defineEventHandler(async (event) => {
   if (!body.name) {
     throw createError({ statusCode: 400, message: "Name is required" });
   }
+  const now = (/* @__PURE__ */ new Date()).toISOString();
   const newMember = {
     id: crypto.randomUUID(),
     name: body.name,
-    createdAt: (/* @__PURE__ */ new Date()).toISOString(),
-    updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+    createdAt: now,
+    updatedAt: now
   };
   await db.insert(members).values(newMember);
   return newMember;
@@ -3198,9 +3315,6 @@ const addPlayer_post = defineEventHandler(async (event) => {
   }
   if (shuttlecock.players.length >= 4) {
     throw createError({ statusCode: 400, message: "Maximum 4 players allowed" });
-  }
-  if (shuttlecock.players.some((p) => p.memberId === memberId)) {
-    throw createError({ statusCode: 400, message: "Member already added" });
   }
   const newPlayer = {
     id: crypto.randomUUID(),

@@ -1,5 +1,9 @@
 <script setup lang="ts">
 const { tubes, createTube } = useTubes()
+
+definePageMeta({
+  middleware: 'auth'
+})
 </script>
 
 <template>

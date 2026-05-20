@@ -2,6 +2,10 @@
 const { members, addMember, deleteMember } = useMembers()
 const { tubes, togglePaymentStatus } = useTubes()
 
+definePageMeta({
+  middleware: 'auth'
+})
+
 const newMemberName = ref('')
 const searchQuery = ref('')
 const expandedMemberId = ref<string | null>(null)

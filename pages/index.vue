@@ -1,6 +1,10 @@
 <script setup lang="ts">
 const { tubes } = useTubes()
 
+definePageMeta({
+  middleware: 'auth'
+})
+
 const stats = computed(() => {
   let totalShuttlecocks = 0
   let completedShuttlecocks = 0
