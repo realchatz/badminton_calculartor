@@ -1,0 +1,9 @@
+{
+  "pid": 8272,
+  "startedAt": 1779246325090,
+  "command": "dev",
+  "cwd": "D:/badminton_calculator/badminton-fee-app",
+  "port": 3000,
+  "hostname": "::1",
+  "url": "http://[::1]:3000"
+}
