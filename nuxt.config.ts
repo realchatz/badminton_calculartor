@@ -3,7 +3,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   runtimeConfig: {
     public: {
-      promptPayId: '000-000-0000' // Default value, override with NUXT_PUBLIC_PROMPTPAY_ID
+      promptPayId: '095-557-6915' // Default value, override with NUXT_PUBLIC_PROMPTPAY_ID
     }
   },
   devtools: { enabled: true },
